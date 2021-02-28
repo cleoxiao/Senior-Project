@@ -1,0 +1,14 @@
+moon
+candle
+bridge
+bird
+fish
+leaf
+tree
+rainbow
+sun
+cloud
+umbrella
+book
+flower
+crown
