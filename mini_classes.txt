@@ -12,5 +12,3 @@ crown
 leaf
 sun
 umbrella
-
-
