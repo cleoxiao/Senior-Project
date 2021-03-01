@@ -2,34 +2,111 @@
 variables
 */
 var model;
-var canvas;
+//var canvas = document.getElementById('canvas');
+var canvas = canvas = window._canvas = new fabric.Canvas('canvas');
+var ctx = canvas.getContext('2d');
 var classNames = [];
-var canvas;
 var coords = [];
-var mousePressed = false;
+// var mousePressed = false;
 var mode;
+
+var radius = 5;
+var controller = new Leap.Controller();
+
 
 /*
 prepare the drawing canvas 
 */
 $(function() {
-    canvas = window._canvas = new fabric.Canvas('canvas');
-    canvas.backgroundColor = '#ffffff';
-    canvas.isDrawingMode = 0;
-    canvas.freeDrawingBrush.color = "black";
-    canvas.freeDrawingBrush.width = 10;
-    canvas.renderAll();
-    //setup listeners 
-    canvas.on('mouse:up', function(e) {
+    // canvas = window._canvas = new fabric.Canvas('canvas');
+    // canvas.backgroundColor = '#ffffff';
+    // canvas.isDrawingMode = 0;
+    // canvas.freeDrawingBrush.color = "black";
+    // canvas.freeDrawingBrush.width = 10;
+    // canvas.renderAll();
+    // //setup listeners 
+    // canvas.on('mouse:up', function(e) {
+    //     getFrame();
+    //     mousePressed = false
+    // });
+    // canvas.on('mouse:down', function(e) {
+    //     mousePressed = true
+    // });
+    // canvas.on('mouse:move', function(e) {
+    //     recordCoor(e)
+    // });
+    ctx.translate(canvas.width/2, canvas.height);
+    ctx.fillStyle = "rgba(0,0,0,0.9)";
+    ctx.strokeStyle = "rgba(0,0,0,0.9)"
+    ctx.lineWidth = 5;  
+
+    function drawCircle(center, radius, color, fill) {
+        // Make an closed arc with a complete rotation
+        ctx.beginPath();
+        ctx.arc(center[0], center[1], radius, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.lineWidth = 4;
+        // Choose whether to fill or outline the circle
+        if (fill) {
+          ctx.fillStyle = color;
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = color;
+          ctx.stroke();
+        }
+      }
+      
+
+    function draw(frame) {
+        //console.log("drawing")
+        // set up data array and other variables
+        var data = [],
+            pos, i, len;
+    
+        //drawCircle([canvas.width/2, 50], 20, '#0F0');
+            // cover the canvas with a 10% opaque layer for fade out effect.
+        //ctx.fillStyle = "rgba(0,0,0,0.9)";
+        ctx.fillStyle = "rgba(255,255,255,0.01)";
+        ctx.fillRect(-canvas.width/2,-canvas.height,canvas.width,canvas.height);
+    
+        // set the fill to black for the points
+        ctx.fillStyle = "rgba(0,0,0,1)";
+    
+        // loop over the frame's pointables
+       
+        for (i=0, len=frame.pointables.length; i<len; i++) {
+          // get the pointable and its position
+          pos = frame.pointables[i].tipPosition;
+           
+          
+
+          //ctx.fillRect(-canvas.width/2,-canvas.height,canvas.width,canvas.height);
+    
+          // add the position data to our data array
+          data.push(pos);
+        //   if (pos.x >= 0 && pos.y >= 0){
+        //       coords.push(pos)
+        // }
+        var position = [pos[0],pos[1]];
+        //console.log(position); 
+        coords.push(position);
+    
+ 
+        // draw the circle where the pointable is
+          ctx.beginPath();
+          ctx.arc(pos[0]-radius/2 ,-(pos[1]-radius/2),radius,0,2*Math.PI);
+          ctx.fill();
+          ctx.stroke();
+          
+        }
         getFrame();
-        mousePressed = false
-    });
-    canvas.on('mouse:down', function(e) {
-        mousePressed = true
-    });
-    canvas.on('mouse:move', function(e) {
-        recordCoor(e)
-    });
+    }
+
+    Leap.loop(draw);
+    // canvas.on('mouse:out', function(e) {
+    //         console.log("frame update");
+            
+    // });
 })
 
 /*
@@ -45,21 +122,20 @@ function setTable(top5, probs) {
     }
     //create the pie 
     createPie(".pieID.legend", ".pieID.pie");
-
 }
 
 /*
 record the current drawing coordinates
 */
-function recordCoor(event) {
-    var pointer = canvas.getPointer(event.e);
-    var posX = pointer.x;
-    var posY = pointer.y;
+// function recordCoor(event) {
+//     var pointer = canvas.getPointer(event.e);
+//     var posX = pointer.x;
+//     var posY = pointer.y;
 
-    if (posX >= 0 && posY >= 0 && mousePressed) {
-        coords.push(pointer)
-    }
-}
+//     if (posX >= 0 && posY >= 0 && mousePressed) {
+//         coords.push(pointer)
+//     }
+// }
 
 /*
 get the best bounding box by trimming around the drawing
@@ -109,6 +185,7 @@ get the prediction
 */
 function getFrame() {
     //make sure we have at least two recorded coordinates 
+    console.log("frame");
     if (coords.length >= 2) {
 
         //get the image data from the canvas 
@@ -228,7 +305,8 @@ async function start(cur_mode) {
     model.predict(tf.zeros([1, 28, 28, 1]))
     
     //allow drawing on the canvas 
-    allowDrawing()
+    //allowDrawing()
+    document.getElementById('status').innerHTML = 'Model Loaded';
     
     //load the class names
     await loadDict()
